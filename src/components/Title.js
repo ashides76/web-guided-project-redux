@@ -1,32 +1,61 @@
-import React, { useState, useReducer } from 'react';
+import React, { useState } from 'react';
+import { connect } from 'react-redux';
 
-import titleReducer, { initialState } from '../reducers/titleReducer';
-import { toggleEditing, updateTitle} from './../actions/titleActions';
+import { toggleEditing, updateTitle } from '../actions/titleActions';
 
-import TitleDisplay from './TitleDisplay';
-import TitleForm from './TitleForm';
+// Step 2
+// connect the component to the redux store using "connect"
+// 2a - build a mSTP function to pass into connect
 
-const Title = () => {
-  const [state, dispatch] = useReducer(titleReducer, initialState);
+const Title = props => {
+  console.log('props: ', props);
 
-  const handleToggleEditing = () => {
-    dispatch(toggleEditing());
-  }
+  const [newTitleText, setNewTitleText] = useState();
 
-  const handleTitleUpdate = (title) => {
-    dispatch(updateTitle(title));
-  }
+  const handleChanges = e => {
+    setNewTitleText(e.target.value);
+  };
 
   return (
     <div>
-      <h1>{state.appName}</h1>
-      {
-        !state.editing ? 
-          <TitleDisplay title={state.title} handleToggleEditing={handleToggleEditing}/>: 
-          <TitleForm handleTitleUpdate={handleTitleUpdate}/>
-      }
+      {!props.editing ? (
+        <h1>
+          {props.title}{' '}
+          <i className="far fa-edit" onClick={props.toggleEditing} />
+        </h1>
+      ) : (
+        <div>
+          <input
+            className="title-input"
+            type="text"
+            name="newTitleText"
+            value={newTitleText}
+            onChange={handleChanges}
+          />
+          <button onClick={() => props.updateTitle(newTitleText)}>
+            Update title
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
-export default Title;
+const mapStateToProps = state => {
+  return {
+    editing: state.titleReducer.editing,
+    title: state.titleReducer.title
+  };
+};
+
+// connect is a "higher order component (HOC)"
+export default connect(mapStateToProps, { updateTitle })(Title);
+
+// connect is a function that gets called twice!
+// The first call:
+// takes two arguments
+// 1- a function (mapStateToProps) - this maps our redux state to the props of the component we are connecting
+
+// 2- an object of action creators - this wraps each action creator inside dispatch, and then adds the AC to the props of the component we are connecting
+
+// The second call takes the component you wish to connect as an argument
